@@ -56,6 +56,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend Application URLs & Paths
+    |--------------------------------------------------------------------------
+    |
+    | These settings define the base URL and specific paths for your frontend
+    | application that are used to construct authentication-related links,
+    | such as email verification and password reset URLs sent to users.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
+    'frontend_mail_verify_path' => env('FRONTEND_MAIL_VERIFY_PATH', 'verify-email'),
+
+    'frontend_reset_password_path' => env('FRONTEND_RESET_PASSWORD_PATH', 'reset-password'),
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

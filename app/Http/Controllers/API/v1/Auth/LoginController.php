@@ -2,31 +2,70 @@
 namespace App\Http\Controllers\API\v1\Auth;
 
 use App\Models\User;
-use Illuminate\Http\Request;
-use App\Enums\HttpStatusCode;
+use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\API\v1\Auth\LoginRequest;
 
 class LoginController extends Controller
 {
-    public function login(LoginRequest $request)
+/**
+     * Handle the incoming login request.
+     *
+     * @param  \App\Http\Requests\LoginRequest  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function __invoke(LoginRequest $request): JsonResponse
     {
+        // Log the start of the login attempt
+        Log::info('Login attempt for email: ' . $request->email, ['ip_address' => $request->ip()]);
+
         $user = User::where('email', $request->email)->first();
+
+        // Check for user existence and password validity
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->error('Invalid credentials', HttpStatusCode::Unauthorized->value);
+            // Log failed login attempt due to invalid credentials
+            Log::warning('Login failed: Invalid credentials for email: ' . $request->email, ['ip_address' => $request->ip()]);
+            return response()->error('Invalid credentials', Response::HTTP_UNAUTHORIZED);
         }
 
+        // Check if the user's email is verified
         if (!$user->hasVerifiedEmail()) {
-            return response()->error('Please verify your email first.', HttpStatusCode::Forbidden->value);
+            // Log failed login attempt due to unverified email
+            Log::warning('Login failed: Email not verified for user ID: ' . $user->id . ' email: ' . $user->email, ['ip_address' => $request->ip()]);
+            return response()->error('Please verify your email first.', Response::HTTP_FORBIDDEN);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-        $data = [
-            'token' => $token,
-            'user' => $user,
-        ];
+        try {
+            // Create a new Sanctum token for the user
+            $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->success('Login Successsful!', $data);
+            // Log successful token creation
+            Log::info('Sanctum token created for user ID: ' . $user->id . ' email: ' . $user->email);
+
+            $data = [
+                'token' => $token,
+                'user' => $user->only(['id', 'name', 'email']), // Return selected user fields for security/efficiency
+            ];
+
+            // Log successful login
+            Log::info('User login successful for user ID: ' . $user->id . ' email: ' . $user->email, ['ip_address' => $request->ip()]);
+
+            return response()->success('Login Successful!', Response::HTTP_OK, $data);
+
+        } catch (Throwable $th) {
+            Log::error("Login failed unexpectedly during token creation for user ID: " . $user->id . " email: " . $user->email . " - " . $th->getMessage(), [
+                'exception' => $th,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ]);
+
+            return response()->error(
+                'An unexpected error occurred during login. Please try again later.',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

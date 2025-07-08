@@ -1,10 +1,17 @@
 <?php
 
 use Illuminate\Http\Request;
-use App\Enums\HttpStatusCode;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Application;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,36 +25,130 @@ return Application::configure(basePath: dirname(__DIR__))
     })
 
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (Throwable $th, Request $request) {
-            if ($request->is('api/*') || $request->expectsJson()) {
-                // Default status code fallback
-                $statusCode = $th->getCode();
-                $statusCode = is_int($statusCode) && $statusCode >= HttpStatusCode::Continue->value && $statusCode <= HttpStatusCode::NetworkAuthenticationRequired->value
-                    ? $statusCode
-                    : HttpStatusCode::InternalServerError->value;
+        $isProd = app()->environment('production');
+        $isDebugging = !$isProd && config('app.debug');
 
-                // Determine message and debug info
-                $isProd = app()->environment('production');
-                $message = $isProd ? 'Something went wrong. Please try again later.' : ($th->getMessage() ?: 'An unexpected error occurred');
+        // Handle ValidationException
+        $exceptions->render(function (ValidationException $e, Request $request) {
+            if ($request->expectsJson()) {
+                $message = 'Validation failed!';
+                $errors = $e->errors();
 
-                // Only attach debug info if not in production
-                $debug = null;
-                if (!$isProd) {
-                    $debug = [
-                        'file'  => $th->getFile(),
-                        'line'  => $th->getLine(),
-                        'trace' => collect($th->getTrace())->take(5)->toArray(), // optional: limit trace depth
-                    ];
+                return response()->error($message, Response::HTTP_UNPROCESSABLE_ENTITY, $errors);
+            }
+            return null; // Let Laravel's default web handler take over
+        });
 
-                    // Check if the exception has an errors() method (e.g. ValidationException)
-                    if (method_exists($th, 'errors')) {
-                        $debug['errors'] = $th->errors();
-                    }
+        // Handle specific HTTP-related Exceptions
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->error('Unauthenticated.', Response::HTTP_UNAUTHORIZED);
+            }
+            return null;
+        });
+
+        $exceptions->render(function (AuthorizationException $e, Request $request) {
+            if ($request->expectsJson()) {
+                $message = $e->getMessage() ?: 'This action is unauthorized.';
+                return response()->error($message, Response::HTTP_FORBIDDEN);
+            }
+            return null;
+        });
+
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->error('Resource not found.', Response::HTTP_NOT_FOUND);
+            }
+            return null;
+        });
+
+        $exceptions->render(function (MethodNotAllowedHttpException $e, Request $request) use($isDebugging) {
+            if ($request->expectsJson()) {
+                $allowedMethods = $e->getHeaders()['Allow'] ?? '';
+                $message = 'Method not allowed.';
+
+                $debugInfo = null;
+                if ($isDebugging) {
+                    $debugInfo = ['allowed_methods' => explode(', ', $allowedMethods)];
                 }
 
-                return response()->error($message, $statusCode, $debug);
+                return response()->error($message, Response::HTTP_METHOD_NOT_ALLOWED, $debugInfo);
             }
+            return null;
+        });
 
-            return null; // fallback to Laravel default
+        $exceptions->render(function (HttpException $e, Request $request) {
+            if ($request->expectsJson()) {
+                $statusCode = $e->getStatusCode();
+                $message = $e->getMessage() ?: Response::$statusTexts[$statusCode] ?? 'An HTTP error occurred.';
+
+                return response()->error($message, $statusCode);
+            }
+            return null;
+        });
+
+        // Handle QueryException
+        $exceptions->render(function (QueryException $e, Request $request) use($isDebugging){
+            if ($request->expectsJson()) {
+                // Database errors are typically 500 Internal Server Error
+                $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR;
+
+                // Always log the full exception for database errors
+                Log::error($e);
+
+                // Determine user-friendly message based on debug mode
+                $message = $isDebugging
+                    ? 'A database query failed: ' . $e->getMessage()
+                    : 'A database error occurred. Please try again later.';
+
+                $debugInfo = null;
+                if ($isDebugging) {
+                    $debugInfo = [
+                        'exception' => get_class($e),
+                        'message'   => $e->getMessage(),
+                        'file'      => $e->getFile(),
+                        'line'      => $e->getLine(),
+                        'sql'       => $e->getSql(),
+                        'bindings'  => $e->getBindings(),
+                        'code'      => $e->getCode(),
+                        'trace'     => collect($e->getTrace())->take(15)->toArray(),
+                    ];
+                }
+
+                return response()->error($message, $statusCode, $debugInfo);
+            }
+            return null;
+        });
+
+        // Catch-all for all other Throwables
+        $exceptions->render(function (Throwable $th, Request $request) use($isDebugging){
+            if ($request->expectsJson()) {
+                // Default status code fallback
+                $statusCode = $th->getCode();
+                $statusCode = is_int($statusCode) && $statusCode >= Response::HTTP_CONTINUE && $statusCode <= Response::HTTP_NETWORK_AUTHENTICATION_REQUIRED
+                 ? $statusCode
+                 : Response::HTTP_INTERNAL_SERVER_ERROR;
+
+                // Log the full exception for all unhandled errors
+                Log::error($th);
+
+                $message = $isDebugging
+                    ? ($th->getMessage() ?: 'An unexpected error occurred.')
+                    : 'Something went wrong. Please try again later.';
+
+                $debugInfo = null;
+                if ($isDebugging) {
+                    $debugInfo = [
+                    'exception' => get_class($th),
+                    'message'   => $th->getMessage(),
+                    'file'      => $th->getFile(),
+                    'line'      => $th->getLine(),
+                    'trace'     => collect($th->getTrace())->take(15)->toArray(),
+                    ];
+                }
+
+                return response()->error($message, $statusCode, $debugInfo);
+            }
+            return null;
         });
     })->create();

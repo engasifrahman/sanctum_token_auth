@@ -4,7 +4,7 @@ namespace App\Http\Requests\API\v1\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginRequest extends FormRequest
+class ResetPasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,8 +22,9 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required',
+            'password' => 'required|confirmed|min:6',
         ];
     }
 }

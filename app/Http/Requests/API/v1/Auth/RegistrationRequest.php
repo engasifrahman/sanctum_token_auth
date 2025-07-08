@@ -2,17 +2,10 @@
 
 namespace App\Http\Requests\API\v1\Auth;
 
-use App\Enums\HttpStatusCode;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\ValidationException;
-use App\HTTP\Requests\CustomFailedValidationHandler;
-use Illuminate\Http\Exceptions\HttpResponseException;
 
 class RegistrationRequest extends FormRequest
 {
-    use CustomFailedValidationHandler;
-
     /**
      * Determine if the user is authorized to make this request.
      */
