@@ -36,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return response()->error($message, Response::HTTP_UNPROCESSABLE_ENTITY, $errors);
             }
+
             return null; // Let Laravel's default web handler take over
         });
 
@@ -44,21 +45,31 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->error('Unauthenticated.', Response::HTTP_UNAUTHORIZED);
             }
+
             return null;
         });
 
         $exceptions->render(function (AuthorizationException $e, Request $request) {
             if ($request->expectsJson()) {
                 $message = $e->getMessage() ?: 'This action is unauthorized.';
+
                 return response()->error($message, Response::HTTP_FORBIDDEN);
             }
+
             return null;
         });
 
-        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) use($isDebugging) {
             if ($request->expectsJson()) {
-                return response()->error('Resource not found.', Response::HTTP_NOT_FOUND);
+                $message = 'Resource not found.';
+                $statusCode = $e->getStatusCode() ?? Response::HTTP_NOT_FOUND;
+                if ($isDebugging) {
+                    $message = $e->getMessage() ?: Response::$statusTexts[$statusCode] ?? $message;
+                }
+
+                return response()->error($message, $statusCode);
             }
+
             return null;
         });
 
@@ -74,6 +85,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return response()->error($message, Response::HTTP_METHOD_NOT_ALLOWED, $debugInfo);
             }
+
             return null;
         });
 
@@ -84,6 +96,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return response()->error($message, $statusCode);
             }
+
             return null;
         });
 
@@ -93,10 +106,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 // Database errors are typically 500 Internal Server Error
                 $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR;
 
-                // Always log the full exception for database errors
                 Log::error($e);
 
-                // Determine user-friendly message based on debug mode
                 $message = $isDebugging
                     ? 'A database query failed: ' . $e->getMessage()
                     : 'A database error occurred. Please try again later.';
@@ -117,6 +128,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return response()->error($message, $statusCode, $debugInfo);
             }
+
             return null;
         });
 
@@ -129,7 +141,6 @@ return Application::configure(basePath: dirname(__DIR__))
                  ? $statusCode
                  : Response::HTTP_INTERNAL_SERVER_ERROR;
 
-                // Log the full exception for all unhandled errors
                 Log::error($th);
 
                 $message = $isDebugging
@@ -149,6 +160,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return response()->error($message, $statusCode, $debugInfo);
             }
+
             return null;
         });
     })->create();

@@ -33,7 +33,6 @@ class ApiResponseMacros
                     $data = $resourceData[JsonResource::$wrap];
                     $meta = $resourceData['meta'] ?? null;
                     $links = $resourceData['links'] ?? null;
-
                 } else {
                     $data = JsonResource::$wrap && array_key_exists(JsonResource::$wrap, $resourceData) ? $resourceData[JsonResource::$wrap] : $resourceData;
                 }

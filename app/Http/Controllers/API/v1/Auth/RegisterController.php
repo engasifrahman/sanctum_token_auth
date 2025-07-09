@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Events\Registered;
 use App\Http\Requests\API\v1\Auth\RegistrationRequest;
 
 class RegisterController extends Controller
@@ -37,7 +38,8 @@ class RegisterController extends Controller
 
             // Ensure the user object exists before sending the verification notification
             if ($user) {
-                $user->sendEmailVerificationNotification();
+                event(new Registered($user));
+
                 // Log the email verification notification attempt
                 Log::info('Email verification notification sent to user: ' . $user->email);
             }
