@@ -23,7 +23,6 @@ class LoginController extends Controller
         Log::info('Login attempt for email: ' . $request->email, ['ip_address' => $request->ip()]);
 
         $user = User::where('email', $request->email)->first();
-
         // Check for user existence and password validity
         if (!$user || !Hash::check($request->password, $user->password)) {
             // Log failed login attempt due to invalid credentials
@@ -40,14 +39,14 @@ class LoginController extends Controller
 
         try {
             // Create a new Sanctum token for the user
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $token = $user->createToken($user->email)->plainTextToken;
 
             // Log successful token creation
             Log::info('Sanctum token created for user ID: ' . $user->id . ' email: ' . $user->email);
 
             $data = [
                 'token' => $token,
-                'user' => $user->only(['id', 'name', 'email']), // Return selected user fields for security/efficiency
+                'user' => $user->only(['id', 'name', 'email', 'role_names']), // Return selected user fields for security/efficiency
             ];
 
             // Log successful login

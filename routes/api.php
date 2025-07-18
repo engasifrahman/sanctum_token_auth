@@ -25,8 +25,22 @@ Route::prefix('/v1')->group(function () {
     Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::post('/logout', LogoutController::class);
 
-        Route::get('/user', function (Request $request) {
-            return $request->user();
+        Route::middleware(['role:Admin | Super Admin'])->group(function () {
+            Route::get('/admin', function (Request $request) {
+                return $request->user();
+            });
+        });
+
+        Route::middleware(['role:User'])->group(function () {
+            Route::get('/user', function (Request $request) {
+                return $request->user();
+            });
+        });
+
+        Route::middleware(['role:Subscriber'])->group(function () {
+            Route::get('/subscriber', function (Request $request) {
+                return $request->user();
+            });
         });
     });
 });

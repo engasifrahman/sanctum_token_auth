@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use App\Mixins\ApiResponseMacros;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Database\Events\QueryExecuted;
@@ -30,6 +32,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register a global Gate policy to allow all abilities for administrators
+        // This allows administrators to bypass all authorization checks
+        Gate::before(function (User $user, string $ability) {
+            if ($user->isAdministrator()) {
+                return true;
+            }
+        });
+
         // Load Response macros for seamless API responses
         Response::mixin(new ApiResponseMacros());
 
