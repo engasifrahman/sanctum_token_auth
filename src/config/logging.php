@@ -2,7 +2,11 @@
 
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
+use App\Logging\LogContextProcessor;
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\SyslogUdpHandler;
+use App\Logging\AddLogContextProcessor;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
 
 return [
@@ -18,7 +22,7 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'stack'),
+    'default' => env('LOG_CHANNEL', 'structured_daily'),
 
     /*
     |--------------------------------------------------------------------------
@@ -60,41 +64,64 @@ return [
 
         'single' => [
             'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => storage_path('logs/app.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
+            'tap' => [AddLogContextProcessor::class],
         ],
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => storage_path('logs/app.log'),
+            'path' => storage_path('logs/app/' . date('Y/m/') . 'app.log'),
             'level' => env('LOG_LEVEL', 'debug'),
-            'days' => env('LOG_DAILY_DAYS', 14),
+            'days' => env('LOG_DAILY_DAYS', 31),
             'replace_placeholders' => true,
+            'tap' => [AddLogContextProcessor::class],
+        ],
+
+        'json_daily' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'handler' => RotatingFileHandler::class,
+            'handler_with' => [
+                'filename' => storage_path('logs/app/' . date('Y/m/') . '/app.log'),
+                'maxFiles' => 31, // how many days of logs to keep
+            ],
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => [
+                'prettyPrint' => true, // Set to true for more readable JSON in file
+            ],
+            'processors' => [
+                LogContextProcessor::class,
+            ],
         ],
 
         'sql' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/sql.log'),
-            'level' =>  env('LOG_LEVEL', 'debug'),
-            'days' => 30,
+            'path' => storage_path('logs/sql/' . date('Y/m/') . 'sql.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 31),
             'replace_placeholders' => true,
+            'tap' => [AddLogContextProcessor::class],
         ],
 
         'cli' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/cli_commands.log'),
-            'level' =>  env('LOG_LEVEL', 'debug'),
-            'days' => 30,
+            'path' => storage_path('logs/cli_app/' . date('Y/m/') . 'cli_app.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 31),
             'replace_placeholders' => true,
+            'tap' => [AddLogContextProcessor::class],
         ],
 
         'cli_sql' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/cli_sql.log'),
-            'level' =>  env('LOG_LEVEL', 'debug'),
-            'days' => 30,
+            'path' => storage_path('logs/cli_sql/' . date('Y/m/') . 'cli_sql.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 31),
             'replace_placeholders' => true,
+            'tap' => [AddLogContextProcessor::class],
         ],
 
         'slack' => [

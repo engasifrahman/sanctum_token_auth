@@ -5,6 +5,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\RequestIdMiddleware;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -25,8 +26,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class
         ]);
-    })
 
+        $middleware->web(append: [
+            RequestIdMiddleware::class,
+        ]);
+
+        $middleware->api(prepend: [
+            RequestIdMiddleware::class,
+        ]);
+    })
     ->withExceptions(function (Exceptions $exceptions) {
         $isProd = app()->environment('production');
         $isDebugging = !$isProd && config('app.debug');
