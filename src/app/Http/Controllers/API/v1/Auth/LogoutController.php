@@ -10,7 +10,7 @@ use App\Http\Controllers\Controller;
 
 class LogoutController extends Controller
 {
-/**
+    /**
      * Log out the authenticated user by revoking their current access token.
      *
      * @param  Request  $request
@@ -18,38 +18,35 @@ class LogoutController extends Controller
      */
     public function __invoke(Request $request): JsonResponse
     {
-        // Retrieve the authenticated user from the request.
+        // Retrieve the authenticated user from the request
         $user = $request->user();
 
+        // Define reusable log context
+        $logContext = fn () => [
+            'user_id'    => $user?->id ?? null,
+            'email'      => $user?->email ?? null,
+        ];
+
+        Log::info('User logout attempt.', $logContext());
+
         try {
-            // Delete the current access token associated with the authenticated user.
-            $user->currentAccessToken()->delete();
+            // Delete the current access token associated with the authenticated user
+            $user->currentAccessToken()?->delete();
 
-            // Log the successful logout for auditing purposes
-            Log::info('User logged out successfully.', [
-                'user_id' => $user->id,
-                'email' => $user->email ?? 'N/A',
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->header('User-Agent'),
-            ]);
+            Log::info('User logged out successfully.', $logContext());
 
-            // Return a success JSON response
-            return response()->success('Logged out successfully.'); // Using Response::HTTP_OK
+            return response()->success('Logged out successfully.');
+        } catch (Throwable $th) {
+            Log::error('Failed to revoke current access token during logout.', array_merge($logContext(), [
+                    'exception_message' => $th->getMessage(),
+                    'exception_file'    => $th->getFile(),
+                    'exception_line'    => $th->getLine(),
+            ]));
 
-        } catch (Throwable $e) {
-            // Log any unexpected errors that occur during the token deletion process.
-            Log::error('Failed to revoke current access token during logout.', [
-                'user_id' => $user->id ?? 'N/A',
-                'email' => $user->email ?? 'N/A',
-                'exception_message' => $e->getMessage(),
-                'exception_file' => $e->getFile(),
-                'exception_line' => $e->getLine(),
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->header('User-Agent'),
-            ]);
-
-            // Return an error JSON response with a 500 status code
-            return response()->error('Failed to log out. An internal server error occurred.', Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->error(
+                'Failed to log out. An internal server error occurred.',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 }

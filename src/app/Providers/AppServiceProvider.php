@@ -81,7 +81,7 @@ class AppServiceProvider extends ServiceProvider
 
             // Generate the signed URL for the *backend* verification route
             $temporarySignedRoute = URL::temporarySignedRoute(
-                'verification.verify', // This is the name of your API verification route
+                'auth.verification.verify', // This is the name of your API verification route
                 Carbon::now()->addMinutes(config('auth.verification.expire', 60)),
                 [
                     'id' => $id,

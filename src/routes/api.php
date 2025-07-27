@@ -4,27 +4,30 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\v1\Auth\LoginController;
 use App\Http\Controllers\API\v1\Auth\LogoutController;
+use App\Http\Controllers\API\v1\Auth\PasswordController;
 use App\Http\Controllers\API\v1\Auth\RegisterController;
-use App\Http\Controllers\API\v1\Auth\ResetPasswordController;
-use App\Http\Controllers\API\v1\Auth\ForgotPasswordController;
 use App\Http\Controllers\API\v1\Auth\EmailVerificationController;
 
 Route::prefix('/v1')->group(function () {
     Route::get('/health', fn () => 'Health is good!');
 
-    Route::post('/register', RegisterController::class);
-    Route::post('/login', LoginController::class)->name('login');
-    Route::post('/resend-verification-mail', [EmailVerificationController::class, 'resend']);
-    Route::post('/forgot-password', ForgotPasswordController::class);
-    Route::post('/reset-password', ResetPasswordController::class)->name('password.reset');
+    // Public Auth Routes
+    Route::prefix('auth')->name('auth.')->group(function () {
+        Route::post('register', RegisterController::class)->name('register');
+        Route::post('login', [LoginController::class, 'login'])->name('login');
+        Route::post('forgot-password', [PasswordController::class, 'forgotPassword'])->name('password.forgot');
+        Route::post('reset-password', [PasswordController::class, 'resetPassword'])->name('password.reset');
+        Route::post('resend-verification-email', [EmailVerificationController::class, 'resendVerificationEmail'])->name('verification.resend');
+        Route::post('verify-email/{id}/{hash}', [EmailVerificationController::class, 'verifyEmailLink'])->middleware('signed')->name('verification.verify');
+    });
 
-    Route::middleware('signed')->group(function () {
-        Route::post('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify');
+    // Protected Auth Routes
+    Route::middleware(['auth:sanctum', 'verified'])->prefix('auth')->name('auth.')->group(function () {
+        Route::post('refresh-token', [LoginController::class, 'refreshToken'])->name('token.refresh');
+        Route::post('logout', LogoutController::class)->name('logout');
     });
 
     Route::middleware(['auth:sanctum', 'verified'])->group(function () {
-        Route::post('/logout', LogoutController::class);
-
         Route::middleware(['role:Admin | Super Admin'])->group(function () {
             Route::get('/admin', function (Request $request) {
                 return $request->user();

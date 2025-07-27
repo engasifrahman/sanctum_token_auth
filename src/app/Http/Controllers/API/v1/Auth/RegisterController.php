@@ -21,45 +21,45 @@ class RegisterController extends Controller
      */
     public function __invoke(RegistrationRequest $request): JsonResponse
     {
-        // Log the start of the registration attempt
-        Log::info('Attempting user registration for email: ' . $request->email);
+        // Define reusable log context
+        $logContext = fn ($user = null) => [
+            'user_id'    => $user?->id ?? null,
+            'email'      => $user?->email ?? $request->input('email') ?? null,
+        ];
+
+        Log::info('User registration attempt.', $logContext());
 
         DB::beginTransaction();
 
         try {
+            // Create a new user instance
             $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
+                'name'     => $request->name,
+                'email'    => $request->email,
                 'password' => $request->password,
             ]);
 
-            // Log successful user creation
-            Log::info('User created successfully for user ID: ' . $user->id . ' email: ' . $user->email);
+            Log::info('User created successfully.', $logContext($user));
 
-            // Ensure the user object exists before sending the verification notification
             if ($user) {
+                // Dispatch the Verified event, which will trigger sendEmailVerificationNotification
                 event(new Registered($user));
-
-                // Log the email verification notification attempt
-                Log::info('Email verification notification sent to user: ' . $user->email);
+                Log::info('Email verification notification sent.', $logContext($user));
             }
 
             DB::commit();
 
-            // Log successful transaction commit
-            Log::info('User registration transaction committed for email: ' . $request->email);
+            Log::info('User registration transaction committed.', $logContext($user));
 
             return response()->success('User registered successfully. Please verify your email.');
-
         } catch (Throwable $th) {
             DB::rollBack();
 
-            // Log the full exception details at an error level
-            Log::error("User registration failed for email: " . $request->email . " - " . $th->getMessage(), [
-                'exception' => $th,
-                'request_ip' => $request->ip(),
-                'user_agent' => $request->header('User-Agent'),
-            ]);
+            Log::error('User registration failed.', array_merge($logContext(), [
+                    'exception_message' => $th->getMessage(),
+                    'exception_file'    => $th->getFile(),
+                    'exception_line'    => $th->getLine(),
+            ]));
 
             return response()->error(
                 'Registration failed. Please try again later.',
