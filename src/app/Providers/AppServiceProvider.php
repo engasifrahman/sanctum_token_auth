@@ -123,7 +123,7 @@ class AppServiceProvider extends ServiceProvider
             $frontendResetPasswordPath = rtrim(config('app.frontend_reset_password_path') ?: env('FRONTEND_RESET_PASSWORD_PATH', 'reset-password'), '/');
 
             // Construct the final frontend password reset URL.
-            return "{$frontendBaseUrl}'/{$frontendResetPasswordPath}?{$queryString}";
+            return "{$frontendBaseUrl}/{$frontendResetPasswordPath}?{$queryString}";
         });
     }
 }

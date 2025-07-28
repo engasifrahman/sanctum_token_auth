@@ -8,17 +8,16 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 class EmailVerificationController extends Controller
 {
     /**
      * Mark the user's email address as verified.
      *
-     * @param  EmailVerificationRequest  $request
+     * @param  Request  $request
      * @return JsonResponse
      */
-    public function verifyEmailLink(EmailVerificationRequest $request, $id, $hash): JsonResponse
+    public function verifyEmailLink(Request $request, $id, $hash): JsonResponse
     {
         $user = User::findOrFail($id);
 

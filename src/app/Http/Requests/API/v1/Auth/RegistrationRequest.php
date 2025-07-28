@@ -67,47 +67,37 @@ class RegistrationRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            // Skip if basic validation failed
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }
 
-            $restrictedRoles = ['Admin', 'Super Admin'];
             $selectedRoles = $this->input('roles', []);
-
+            $restrictedRoles = ['Admin', 'Super Admin'];
             $restrictedSelected = array_intersect($selectedRoles, $restrictedRoles);
 
-            // Only apply check if restricted roles are selected
-            if (empty($restrictedSelected)) {
-                return;
+            // Check if restricted roles are selected
+            if (!empty($restrictedSelected)) {
+                $user = Auth::guard('sanctum')->user();
+
+                if (!$this->bearerToken() || !$user) {
+                    $validator->errors()->add('roles', 'Authentication is required to assign admin roles.');
+                    return;
+                }
+
+                if (!$user->isAdministrator()) {
+                    $validator->errors()->add('roles', 'Only existing administrators can assign Admin or Super Admin roles.');
+                    return;
+                }
+
+                if (count($restrictedSelected) !== count($selectedRoles)) {
+                    $validator->errors()->add('roles', 'If Admin or Super Admin is selected, no other roles are allowed.');
+                    return;
+                }
             }
 
-            $user = Auth::guard('sanctum')->user();
-
-            // Require a valid Sanctum token
-            if (!$this->bearerToken() || !$user) {
-                $validator->errors()->add(
-                    'roles',
-                    'Authentication is required to assign admin roles.'
-                );
-                return;
-            }
-
-            // Ensure current user is an administrator
-            if (!$user?->isAdministrator()) {
-                $validator->errors()->add(
-                    'roles',
-                    'Only existing administrators can assign Admin or Super Admin roles.'
-                );
-                return;
-            }
-
-            // Disallow mixing restricted roles with other roles
-            if (array_diff($selectedRoles, $restrictedSelected)) {
-                $validator->errors()->add(
-                    'roles',
-                    'If Admin or Super Admin is selected, no other roles are allowed.'
-                );
+            // Ensure Subscriber always includes User role
+            if (in_array('Subscriber', $selectedRoles) && !in_array('User', $selectedRoles)) {
+                $validator->errors()->add('roles', 'Subscriber role cannot be registered without the User role.');
             }
         });
     }

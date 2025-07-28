@@ -30,7 +30,14 @@ class RoleUserSeeder extends Seeder
                 'updated_at' => now(),
             ],
 
-            // Subscriber for the third user
+            // Subscriber for the third user (regsiter as User first then Subscriber)
+            [
+                'role_id' => 1,
+                'user_id' => 3,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
             [
                 'role_id' => 3,
                 'user_id' => 3,
