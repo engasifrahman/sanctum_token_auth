@@ -23,4 +23,15 @@ class Role extends Model
     {
         return $this->belongsToMany(Role::class, 'role_user', 'role_id', 'user_id');
     }
+
+    /**
+     * Get role IDs by role names.
+     *
+     * @param array<string> $names
+     * @return array<int>
+     */
+    public static function getRoleIdsByNames(array $names): array
+    {
+        return Role::whereIn('name', $names)->pluck('id')->all();
+    }
 }

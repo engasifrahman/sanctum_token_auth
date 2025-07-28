@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\Registered;
 use App\Http\Requests\API\v1\Auth\RegistrationRequest;
+use App\Models\Role;
 
 class RegisterController extends Controller
 {
@@ -25,6 +26,7 @@ class RegisterController extends Controller
         $logContext = fn ($user = null) => [
             'user_id'    => $user?->id ?? null,
             'email'      => $user?->email ?? $request->input('email') ?? null,
+            'role'      => $user?->role_names ?? $request->input('role') ?? null,
         ];
 
         Log::info('User registration attempt.', $logContext());
@@ -38,6 +40,17 @@ class RegisterController extends Controller
                 'email'    => $request->email,
                 'password' => $request->password,
             ]);
+
+            if ($request->filled('roles')) {
+                $roleNames = $request->input('roles');
+
+                $roleIds = Role::getRoleIdsByNames($roleNames);
+
+                // Attach roles without duplicates
+                $user->roles()->sync($roleIds);
+
+                Log::info('User roles assigned.', $logContext($user));
+            }
 
             Log::info('User created successfully.', $logContext($user));
 
