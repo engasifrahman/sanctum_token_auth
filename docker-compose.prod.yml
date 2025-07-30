@@ -7,6 +7,7 @@ services:
         uid: 1412
       context: .
       dockerfile: /docker/php-fpm/Dockerfile
+      target: production
     volumes:
       - ./src:/var/www/
       - ./src/.env.prod:/var/www/.env
@@ -15,7 +16,7 @@ services:
     env_file:
       - ./src/.env.prod
     environment:
-      - APP_ENV=prod
+      - APP_ENV=production
     working_dir: /var/www/
     restart: unless-stopped
 
@@ -30,7 +31,8 @@ services:
     volumes:
       - ./src:/var/www/
       - ./docker/nginx/templates:/etc/nginx/templates
+      - ./docker/nginx/html:/usr/share/nginx/html
     depends_on:
       - app  
     restart: unless-stopped
-  
+

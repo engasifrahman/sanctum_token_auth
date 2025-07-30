@@ -1,0 +1,49 @@
+name: PHPUnit Tests with Coverage
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # adjust as needed
+          extensions: mbstring, intl, sqlite, xdebug
+          coverage: xdebug
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: cd src && composer install --prefer-dist --no-progress
+
+      - name: Generate Application Key
+        # Laravel requires an APP_KEY for encryption.
+        # This step creates a .env file if it doesn't exist and generates a key.
+        run: |
+          cd src
+          cp .env.example .env || true # Copy example env if it exists, ignore error if not
+          php artisan key:generate
+
+      - name: Run PHPUnit with coverage
+        run: cd src && vendor/bin/phpunit --coverage-text --coverage-clover=../coverage.xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml

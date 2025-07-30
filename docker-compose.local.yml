@@ -7,9 +7,11 @@ services:
         uid: 1412
       context: .
       dockerfile: /docker/php-fpm/Dockerfile
+      target: base_php_fpm 
     volumes:
       - ./src:/var/www/
       - ./src/.env.local:/var/www/.env
+      - app_supervisor_logs:/var/www/storage/logs/supervisor
     ports:
       - "8080:80"
     env_file:
@@ -30,7 +32,24 @@ services:
     volumes:
       - ./src:/var/www/
       - ./docker/nginx/templates:/etc/nginx/templates
+      - ./docker/nginx/html:/usr/share/nginx/html
     depends_on:
       - app  
     restart: unless-stopped
-  
+  mysql:
+      image: mysql:8.0
+      container_name: mysql
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: sanctum_token_auth
+        MYSQL_USER: asif
+        MYSQL_PASSWORD: asif
+      ports:
+        - "3307:3306"
+      volumes:
+        - mysql-data:/var/lib/mysql
+      restart: unless-stopped
+
+volumes:
+    mysql-data:
+    app_supervisor_logs:

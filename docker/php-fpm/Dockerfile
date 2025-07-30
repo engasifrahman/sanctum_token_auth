@@ -1,37 +1,106 @@
-FROM php:8.4-fpm
+# syntax=docker/dockerfile:1.4
+# This Dockerfile uses multi-stage builds to create a lean production image
+# while providing a convenient base for development.
 
-# Arguments defined in docker-compose.yml
+# --- Stage 1: Base PHP-FPM Setup (Common dependencies and user setup) ---
+# This stage serves as the foundation for both development and production images.
+# It installs core PHP extensions, system dependencies, Composer, and Supervisor.
+# It also defines the application user and sets up the entrypoint script.
+FROM php:8.2.0-fpm as base_php_fpm
+
+LABEL maintainer="Md. Asif Rahman"
+
+# Arguments for user and UID, passed during build (e.g., from docker-compose.yml)
 ARG user
 ARG uid
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip && docker-php-ext-install pdo pdo_mysql
+# Install system dependencies and PHP extensions
+# Using a single RUN command to minimize layers and improve build cache efficiency.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git \
+        curl \
+        zip \
+        unzip \
+        tzdata \
+        nodejs \
+        npm \
+        supervisor \
+        libpng-dev \
+        libonig-dev \
+        libxml2-dev \
+    && docker-php-ext-install \
+        pdo_mysql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+    && pecl install xdebug \
+    && docker-php-ext-enable xdebug \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions
-RUN docker-php-ext-install mbstring exif pcntl bcmath gd
-
-# Get latest Composer
+# Get latest Composer from the official Composer image.
+# This ensures you always have a recent version of Composer.
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Create system user to run Composer and Artisan Commands
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
+# Create a dedicated system user to run Composer and Artisan Commands.
+# This enhances security by not running the application as root.
+RUN useradd -G www-data,root -u "$uid" -d "/home/$user" "$user" \
+    && mkdir -p "/home/$user/.composer" \
+    && chown -R "$user":"$user" "/home/$user"
 
-# Set working directory
+# Set the working directory for subsequent instructions.
 WORKDIR /var/www
 
-USER $user
+# Copy Supervisor configuration and the custom entrypoint script.
+# These files are essential for managing PHP-FPM and queue workers.
+COPY ./docker/php-fpm/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
+COPY ./docker/php-fpm/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-ENTRYPOINT [ "php-fpm" ]
+# Make the entrypoint script executable.
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Ensure necessary directories for logs and PHP configurations have correct ownership.
+# This is important for the non-root user to write logs and for PHP-FPM to function.
+RUN mkdir -p /var/www/storage/logs/supervisor \
+    && chown -R "$user":"$user" /var/www/storage/logs/supervisor \
+    && chown -R "$user":"$user" /usr/local/etc/php/conf.d
+
+# --- Configuration for the 'base_php_fpm' stage when used as a development image ---
+# These instructions define how the 'base_php_fpm' image will behave if run directly.
+# This is useful for development where code is bind-mounted.
+USER "$user"
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+
+# Define the ENTRYPOINT using the shell form to run multiple commands.
+# This starts supervisord in the background and then execs php-fpm in the foreground
+# as the main process.
+# ENTRYPOINT ["/bin/sh", "-c", "supervisord -c /etc/supervisor/conf.d/supervisord.conf & exec php-fpm -F"]
+
+# --- Stage 2: Production Image (Includes application code and optimized Composer setup) ---
+# This stage builds upon the 'base_php_fpm' stage and adds the application code.
+# It's optimized for production by baking in Composer dependencies at build time.
+FROM base_php_fpm as production
+
+# Re-declare ARGs for this stage if they are needed for subsequent commands in this stage.
+ARG user
+ARG uid
+
+# Copy application code into the image.
+# This is crucial for production deployments where bind mounts are not used.
+# Assuming your build context ('.') is the root of your project, and 'src' is inside it.
+COPY src /var/www/
+
+# Run Composer install for production dependencies.
+# This bakes dependencies into the image, leading to faster container startup in production.
+# It also ensures Composer is not needed at runtime in production.
+RUN composer install --no-dev --optimize-autoloader \
+    && rm -rf /root/.composer /home/"$user"/.composer
+
+# Ensure the entire application directory has the correct ownership.
+# This is vital for the application to run correctly as the non-root user.
+RUN chown -R "$user":"$user" /var/www
+
+# The USER, ENTRYPOINT is inherited from the 'base_php_fpm' stage.
+# No need to redefine them here unless you want different behavior specifically for production.

@@ -17,6 +17,19 @@ server {
 
     location / {
         try_files $uri $uri/ /index.php?$query_string;
+
+        # Enable intercept errors to handle upstream failures
+        proxy_intercept_errors on;
+
+        # If upstream is down, show maintenance page
+        error_page 502 /maintenance.html;
+
         gzip_static on;
+    }
+
+    # Serve the maintenance page as a static file
+    location = /maintenance.html {
+        root /usr/share/nginx/html;
+        internal;
     }
 }
