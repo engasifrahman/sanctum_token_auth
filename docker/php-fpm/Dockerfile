@@ -87,20 +87,21 @@ FROM base_php_fpm as production
 ARG user
 ARG uid
 
-# Copy application code into the image.
-# This is crucial for production deployments where bind mounts are not used.
-# Assuming your build context ('.') is the root of your project, and 'src' is inside it.
-COPY src /var/www/
+# Copy application code into the image and set the correct ownership at the same time.
+# This prevents the 'chown' operation not permitted error.
+COPY --chown="$user":"$user" src /var/www/
+
+# Copy the production environment file and set it as the main .env file.
+# The ownership is already handled by the previous COPY command, so we can omit --chown here.
+COPY src/.env.prod /var/www/.env
+
+# Switch to the non-root user BEFORE running Composer to ensure correct permissions.
+USER "$user"
 
 # Run Composer install for production dependencies.
 # This bakes dependencies into the image, leading to faster container startup in production.
 # It also ensures Composer is not needed at runtime in production.
-RUN composer install --no-dev --optimize-autoloader \
-    && rm -rf /root/.composer /home/"$user"/.composer
+RUN composer install --no-dev --optimize-autoloader && rm -rf /home/"$user"/.composer
 
-# Ensure the entire application directory has the correct ownership.
-# This is vital for the application to run correctly as the non-root user.
-RUN chown -R "$user":"$user" /var/www
-
-# The USER, ENTRYPOINT is inherited from the 'base_php_fpm' stage.
+# The USER, ENTRYPOINT, and CMD are inherited from the 'base_php_fpm' stage.
 # No need to redefine them here unless you want different behavior specifically for production.

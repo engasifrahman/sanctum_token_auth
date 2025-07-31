@@ -46,7 +46,6 @@ else
   # php artisan migrate
 fi
 
-
 echo "Starting supervisord..."
 # exec "php-fpm"
 exec supervisord -c /etc/supervisor/conf.d/supervisord.conf

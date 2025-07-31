@@ -9,8 +9,7 @@ services:
       dockerfile: /docker/php-fpm/Dockerfile
       target: production
     volumes:
-      - ./src:/var/www/
-      - ./src/.env.prod:/var/www/.env
+      - app_supervisor_logs:/var/www/storage/logs/supervisor
     ports:
       - "8080:80"
     env_file:
@@ -36,3 +35,5 @@ services:
       - app  
     restart: unless-stopped
 
+volumes:
+    app_supervisor_logs:
