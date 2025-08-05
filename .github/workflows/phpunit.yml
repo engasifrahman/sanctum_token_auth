@@ -1,4 +1,4 @@
-name: PHPUnit Tests with Coverage
+name: PHPUnit HTML Coverage Report
 
 on:
   push:
@@ -31,19 +31,22 @@ jobs:
       - name: Install dependencies
         run: cd src && composer install --prefer-dist --no-progress
 
-      - name: Generate Application Key
         # Laravel requires an APP_KEY for encryption.
         # This step creates a .env file if it doesn't exist and generates a key.
+      - name: Generate Application Key
         run: |
           cd src
-          cp .env.example .env || true # Copy example env if it exists, ignore error if not
+          cp .env.example .env || true
           php artisan key:generate
 
-      - name: Run PHPUnit with coverage
-        run: cd src && vendor/bin/phpunit --coverage-text --coverage-clover=../coverage.xml
+      - name: Run PHPUnit with HTML coverage
+        run: |
+          cd src
+          mkdir -p ../coverage-html
+          vendor/bin/phpunit --coverage-html ../coverage-html
 
-      - name: Upload coverage report
+      - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: coverage.xml
+          name: html-coverage-report
+          path: coverage-html/
