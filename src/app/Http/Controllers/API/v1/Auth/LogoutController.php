@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\API\v1\Auth;
 
 use Throwable;
@@ -50,4 +51,3 @@ class LogoutController extends Controller
         }
     }
 }
-

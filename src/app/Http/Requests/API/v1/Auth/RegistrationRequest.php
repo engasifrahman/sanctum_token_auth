@@ -8,7 +8,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RegistrationRequest extends FormRequest
 {
-
     /**
      * Prepare the data for validation.
      *
@@ -76,7 +75,8 @@ class RegistrationRequest extends FormRequest
             $restrictedSelected = array_intersect($selectedRoles, $restrictedRoles);
 
             // Check if restricted roles are selected
-            if (!empty($restrictedSelected)) {
+            if (!empty($restrictedSelected))
+            {
                 $user = Auth::guard('sanctum')->user();
 
                 if (!$this->bearerToken() || !$user) {

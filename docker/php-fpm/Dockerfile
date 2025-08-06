@@ -6,7 +6,7 @@
 # This stage serves as the foundation for both development and production images.
 # It installs core PHP extensions, system dependencies, Composer, and Supervisor.
 # It also defines the application user and sets up the entrypoint script.
-FROM php:8.2.0-fpm as base_php_fpm
+FROM php:8.2.0-fpm AS base_php_fpm
 
 LABEL maintainer="Md. Asif Rahman"
 
@@ -22,6 +22,7 @@ RUN apt-get update \
         curl \
         zip \
         unzip \
+        gzip \
         tzdata \
         nodejs \
         npm \
@@ -81,7 +82,7 @@ ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 # --- Stage 2: Production Image (Includes application code and optimized Composer setup) ---
 # This stage builds upon the 'base_php_fpm' stage and adds the application code.
 # It's optimized for production by baking in Composer dependencies at build time.
-FROM base_php_fpm as production
+FROM base_php_fpm AS production
 
 # Re-declare ARGs for this stage if they are needed for subsequent commands in this stage.
 ARG user

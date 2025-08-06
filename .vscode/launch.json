@@ -2,10 +2,19 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Listen for Xdebug",
+      "name": "Listen for Xdebug (Local)",
       "type": "php",
       "request": "launch",
-      "port": 9003,
+      "port": 9001,
+      "pathMappings": {
+        "C:\\Users\\Admin\\Desktop\\sanctum_token_auth\\src": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Listen for Xdebug (Docker)",
+      "type": "php",
+      "request": "launch",
+      "port": 9001,
       "pathMappings": {
         "/var/www": "${workspaceFolder}/src"
       }

@@ -1,0 +1,47 @@
+name: PHP CS Fixer Check
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  phpcsfixer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # Adjust if needed
+          extensions: mbstring, intl
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: cd src && composer install --prefer-dist --no-progress
+
+      - name: Install PHP-CS-Fixer
+        run: composer require --dev friendsofphp/php-cs-fixer
+
+        # Laravel requires an APP_KEY for encryption.
+        # This step creates a .env file if it doesn't exist and generates a key.
+      - name: Generate Application Key
+        run: |
+          cd src
+          cp .env.example .env || true
+          php artisan key:generate
+
+      - name: Run PHP CS Fixer (dry-run)
+        run: |
+          cd src
+          vendor/bin/php-cs-fixer fix app --dry-run --diff --verbose

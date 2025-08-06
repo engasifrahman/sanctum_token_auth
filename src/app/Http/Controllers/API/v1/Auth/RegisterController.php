@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\API\v1\Auth;
 
 use Throwable;
@@ -26,7 +27,7 @@ class RegisterController extends Controller
         $logContext = fn ($user = null) => [
             'user_id'    => $user?->id ?? null,
             'email'      => $user?->email ?? $request->input('email') ?? null,
-            'role'      => $user?->role_names ?? $request->input('role') ?? null,
+            'roles'      => $user?->role_names ?? $request->input('roles') ?? null,
         ];
 
         Log::info('User registration attempt.', $logContext());

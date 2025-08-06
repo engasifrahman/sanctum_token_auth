@@ -6,6 +6,7 @@ use App\Logging\LogContextProcessor;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\SyslogUdpHandler;
 use App\Logging\AddLogContextProcessor;
+use App\Logging\ExcludeErrorsFromStdout;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
 
@@ -129,7 +130,7 @@ return [
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
             'username' => env('LOG_SLACK_USERNAME', 'Laravel Log'),
             'emoji' => env('LOG_SLACK_EMOJI', ':boom:'),
-            'level' => env('LOG_LEVEL', 'critical'),
+            'level' => env('SLACK_LOG_LEVEL', 'critical'),
             'replace_placeholders' => true,
         ],
 
@@ -145,9 +146,20 @@ return [
             'processors' => [PsrLogMessageProcessor::class],
         ],
 
+        'stdout' => [
+            'driver' => 'monolog',
+            'handler' => StreamHandler::class,
+            'with' => [
+                'stream' => 'php://stdout',
+            ],
+            'level' => 'debug',
+            'tap' => [ExcludeErrorsFromStdout::class],
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
         'stderr' => [
             'driver' => 'monolog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => 'error',
             'handler' => StreamHandler::class,
             'handler_with' => [
                 'stream' => 'php://stderr',

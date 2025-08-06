@@ -17,10 +17,13 @@ else
   if [ -n "$XDEBUG_PATH" ]; then
     {
       echo "zend_extension=$XDEBUG_PATH"
-      echo "xdebug.mode=debug"
+      echo "xdebug.mode=develop,coverage,debug"
       echo "xdebug.start_with_request=yes"
       echo "xdebug.client_host=host.docker.internal"
       echo "xdebug.client_port=9003"
+      echo "xdebug.var_display_max_depth=10"
+      echo "xdebug.var_display_max_children=512"
+      echo "xdebug.var_display_max_data=2048"
     } > "$XDEBUG_INI"
   else
     echo "⚠️ Xdebug not found, skipping setup."

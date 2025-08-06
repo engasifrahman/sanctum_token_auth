@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\API\v1\Auth;
 
 use Throwable;
@@ -51,7 +52,17 @@ class LoginController extends Controller
             $token = $user->createToken($user->email)->plainTextToken;
 
             Log::info('User login successful.', $logContext($user));
+            var_dump([
+                'a' => [
+                    'b' => [
+                        'c' => [
+                            'd' => 'e'
+                        ]
+                    ]
+                ]
+            ]);
 
+            exit();
             return response()->success('Login successful.', Response::HTTP_OK, [
                 'access_token' => $token,
                 'token_type'   => 'Bearer',
