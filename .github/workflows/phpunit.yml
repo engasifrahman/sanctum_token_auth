@@ -46,7 +46,7 @@ jobs:
           vendor/bin/phpunit \
           --coverage-html ../coverage-html \
           --coverage-text \
-          --show-uncovered-files
+          --show-uncovered-for-coverage-text
 
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4

@@ -9,6 +9,11 @@ jobs:
   migration-check:
     runs-on: ubuntu-latest
 
+    env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
+        CACHE_STORE: array
+
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +45,8 @@ jobs:
           cp .env.example .env || true
           php artisan key:generate
           php artisan config:clear
+          php artisan cache:clear
+          php artisan config:cache
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
