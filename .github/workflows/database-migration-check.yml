@@ -1,0 +1,50 @@
+name: Database Migration Check
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  migration-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, sqlite
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: cd src && composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare SQLite Database
+        run: |
+          cd src
+          touch database/database.sqlite
+
+      - name: Configure Environment
+        run: |
+          cd src
+          cp .env.example .env || true
+          php artisan key:generate
+          php artisan config:clear
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Run Migration Pretend Check
+        run: |
+          cd src
+          php artisan migrate --pretend --no-interaction
