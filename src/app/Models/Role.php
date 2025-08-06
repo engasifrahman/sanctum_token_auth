@@ -8,9 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
 {
-    /** @use HasFactory<\Database\Factories\RoleFactory> */
     use HasFactory;
-
 
     /**
      * Get the roles that belong to the User.

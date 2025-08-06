@@ -24,8 +24,8 @@ class LoginController extends Controller
     {
         // Define reusable log context
         $logContext = fn ($user = null) => [
-            'user_id'    => $user?->id ?? null,
-            'email'      => $user?->email ?? $request->input('email') ?? null,
+            'user_id'    => $user->id ?? null,
+            'email'      => $user->email ?? $request->input('email') ?? null,
         ];
 
         Log::info('Login attempt.', $logContext());
@@ -52,17 +52,7 @@ class LoginController extends Controller
             $token = $user->createToken($user->email)->plainTextToken;
 
             Log::info('User login successful.', $logContext($user));
-            var_dump([
-                'a' => [
-                    'b' => [
-                        'c' => [
-                            'd' => 'e'
-                        ]
-                    ]
-                ]
-            ]);
 
-            exit();
             return response()->success('Login successful.', Response::HTTP_OK, [
                 'access_token' => $token,
                 'token_type'   => 'Bearer',
@@ -104,7 +94,7 @@ class LoginController extends Controller
 
         try {
             // Revoke the current access token to ensure a new one is created
-            $user->currentAccessToken()?->delete();
+            $user->currentAccessToken()->delete();
 
             Log::info(
                 'Current access token revoked successfully to create a new refresh token.',

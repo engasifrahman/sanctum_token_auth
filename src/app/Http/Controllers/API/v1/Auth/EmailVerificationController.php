@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\v1\Auth;
 
+use Throwable;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -93,8 +94,8 @@ class EmailVerificationController extends Controller
 
         // Define reusable log context accepting optional $user
         $logContext = fn ($user = null) => [
-            'user_id'    => $user?->id ?? null,
-            'email'      => $user?->email ?? $request->input('email') ?? null,
+            'user_id'    => $user->id ?? null,
+            'email'      => $user->email ?? $request->input('email') ?? null,
         ];
 
         // Log the start of the resend attempt without user yet

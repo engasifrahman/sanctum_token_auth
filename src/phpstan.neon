@@ -1,0 +1,20 @@
+includes:
+  - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+  level: 5
+  paths:
+    - app
+
+  # Core PHP rules
+  treatPhpDocTypesAsCertain: false #DEFAULT true
+
+  # Laravel spsecific rules
+  noModelMake: false #DEFAULT true
+  checkModelAppends: true #DEFAULT true
+  checkModelProperties: true #DEFAULT false
+  noEnvCallsOutsideOfConfig: true #DEFAULT true
+  noUnnecessaryCollectionCall: false #DEFAULT true
+  checkAuthCallsWhenInRequestScope: true #DEFAULT false
+  noUnnecessaryEnumerableToArrayCalls: false #DEFAULT false
+

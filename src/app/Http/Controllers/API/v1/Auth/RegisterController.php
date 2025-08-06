@@ -25,9 +25,9 @@ class RegisterController extends Controller
     {
         // Define reusable log context
         $logContext = fn ($user = null) => [
-            'user_id'    => $user?->id ?? null,
-            'email'      => $user?->email ?? $request->input('email') ?? null,
-            'roles'      => $user?->role_names ?? $request->input('roles') ?? null,
+            'user_id'    => $user->id ?? null,
+            'email'      => $user->email ?? $request->input('email') ?? null,
+            'roles'      => $user->role_names ?? $request->input('roles') ?? null,
         ];
 
         Log::info('User registration attempt.', $logContext());

@@ -76,6 +76,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Customizes the email verification link to point to your frontend URL.
         VerifyEmail::createUrlUsing(function (MustVerifyEmail $notifiable) {
+            /** @var User $notifiable */
             $id = $notifiable->getKey();
             $hash = sha1($notifiable->getEmailForVerification());
 
@@ -103,8 +104,8 @@ class AppServiceProvider extends ServiceProvider
             $queryString = http_build_query($queryParams);
 
             // Frontend URL (ensure no trailing slash)
-            $frontendBaseUrl = rtrim(config('app.frontend_url') ?: env('FRONTEND_URL', 'http://localhost:3000'), '/');
-            $frontendMailVerifyPath = rtrim(config('app.frontend_mail_verify_path') ?: env('FRONTEND_MAIL_VERIFY_PATH', 'verify-email'), '/');
+            $frontendBaseUrl = rtrim(config('app.frontend_url') ?: 'http://localhost:3000', '/');
+            $frontendMailVerifyPath = rtrim(config('app.frontend_mail_verify_path') ?: 'verify-email', '/');
 
             // Final URL with frontend-friendly query parameters
             return "{$frontendBaseUrl}/{$frontendMailVerifyPath}?{$queryString}";
@@ -119,8 +120,8 @@ class AppServiceProvider extends ServiceProvider
             ]);
 
             // Frontend URL (ensure no trailing slash)
-            $frontendBaseUrl = rtrim(config('app.frontend_url') ?: env('FRONTEND_URL', 'http://localhost:3000'), '/');
-            $frontendResetPasswordPath = rtrim(config('app.frontend_reset_password_path') ?: env('FRONTEND_RESET_PASSWORD_PATH', 'reset-password'), '/');
+            $frontendBaseUrl = rtrim(config('app.frontend_url') ?: 'http://localhost:3000', '/');
+            $frontendResetPasswordPath = rtrim(config('app.frontend_reset_password_path') ?: 'reset-password', '/');
 
             // Construct the final frontend password reset URL.
             return "{$frontendBaseUrl}/{$frontendResetPasswordPath}?{$queryString}";

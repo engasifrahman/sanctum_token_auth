@@ -24,15 +24,15 @@ class LogoutController extends Controller
 
         // Define reusable log context
         $logContext = fn () => [
-            'user_id'    => $user?->id ?? null,
-            'email'      => $user?->email ?? null,
+            'user_id'    => $user->id ?? null,
+            'email'      => $user->email ?? null,
         ];
 
         Log::info('User logout attempt.', $logContext());
 
         try {
             // Delete the current access token associated with the authenticated user
-            $user->currentAccessToken()?->delete();
+            $user->currentAccessToken()->delete();
 
             Log::info('User logged out successfully.', $logContext());
 

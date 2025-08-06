@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  PHPUnit-test:
+  PHPUnit:
     runs-on: ubuntu-latest
 
     steps:

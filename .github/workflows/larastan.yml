@@ -1,0 +1,36 @@
+name: Static Analysis With Larastan
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  larastan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # adjust as needed
+          extensions: mbstring, intl, pdo, sqlite
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: cd src && composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run Larastan (PHPStan)
+        run: cd src && vendor/bin/phpstan analyse --memory-limit=512M

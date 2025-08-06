@@ -61,7 +61,7 @@ class ApiResponseMacros
      */
     public function error(): Closure
     {
-        return function (string $message = 'Bad request!', int $statusCode = Request::BAD_REQUEST, mixed $errors = null): JsonResponse {
+        return function (string $message = 'Bad request!', int $statusCode = Response::HTTP_BAD_REQUEST, mixed $errors = null): JsonResponse {
             $response = [
                 'status' => false,
                 'message' => $message,
