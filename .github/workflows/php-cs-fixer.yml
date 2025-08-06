@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  phpcsfixer:
+  php-cs-fixer:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,13 +28,8 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: cd src && composer install --prefer-dist --no-progress
+        run: cd src && composer install --prefer-dist --no-progress --no-interaction
 
-      - name: Install PHP-CS-Fixer
-        run: composer require --dev friendsofphp/php-cs-fixer
-
-        # Laravel requires an APP_KEY for encryption.
-        # This step creates a .env file if it doesn't exist and generates a key.
       - name: Generate Application Key
         run: |
           cd src
