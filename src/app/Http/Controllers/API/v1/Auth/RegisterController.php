@@ -42,6 +42,16 @@ class RegisterController extends Controller
                 'password' => $request->password,
             ]);
 
+            if (!$user) {
+                Log::error('User creation failed.', $logContext());
+                return response()->error(
+                    'Registration failed. Please try again later.',
+                    Response::HTTP_INTERNAL_SERVER_ERROR
+                );
+            }
+
+            Log::info('User created successfully.', $logContext($user));
+
             if ($request->filled('roles')) {
                 $roleNames = $request->input('roles');
 
@@ -53,13 +63,9 @@ class RegisterController extends Controller
                 Log::info('User roles assigned.', $logContext($user));
             }
 
-            Log::info('User created successfully.', $logContext($user));
-
-            if ($user) {
-                // Dispatch the Verified event, which will trigger sendEmailVerificationNotification
-                event(new Registered($user));
-                Log::info('Email verification notification sent.', $logContext($user));
-            }
+            // Dispatch the Verified event, which will trigger sendEmailVerificationNotification
+            event(new Registered($user));
+            Log::info('Email verification notification sent.', $logContext($user));
 
             DB::commit();
 
