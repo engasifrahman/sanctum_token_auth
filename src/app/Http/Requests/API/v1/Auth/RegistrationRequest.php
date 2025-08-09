@@ -22,7 +22,9 @@ class RegistrationRequest extends FormRequest
         }
 
         if ($this->filled('roles') && is_array($this->input('roles'))) {
-            $data['roles'] = array_map('ucwords', $this->input('roles'));
+            $data['roles'] = array_map(function($role) {
+                return ucwords(strtolower(trim($role)));
+            }, $this->input('roles'));
         }
 
         if (!empty($data)) {
