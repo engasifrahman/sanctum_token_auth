@@ -128,7 +128,7 @@ class RegistrationRequestTest extends TestCase
             $this->prepareForValidation();
         };
         $closure->call($registrationRequest);
-        
+
         $registrationRequest->authorize();
 
         $validator = $this->validatorFactory->make($registrationRequest->all(), $registrationRequest->rules());
