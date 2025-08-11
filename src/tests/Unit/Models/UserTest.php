@@ -18,6 +18,9 @@ class UserTest extends TestCase
     /**
      * Runs before each test to set up our mocks.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     protected function setUp(): void
@@ -31,6 +34,9 @@ class UserTest extends TestCase
     /**
      * Tests that the roles() method returns a BelongsToMany relationship.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testRolesRelationship(): void
@@ -43,6 +49,9 @@ class UserTest extends TestCase
 
     /**
      * Tests the role_names accessor.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -67,6 +76,9 @@ class UserTest extends TestCase
 
     /**
      * Tests the hasRole method with a single string role.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -94,6 +106,9 @@ class UserTest extends TestCase
     /**
      * Tests the hasRole method with an array of roles.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testHasRoleWithArrayOfRoles(): void
@@ -118,6 +133,9 @@ class UserTest extends TestCase
 
     /**
      * Tests that hasRole is case-insensitive and trims whitespace.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -144,6 +162,9 @@ class UserTest extends TestCase
     /**
      * Tests that isAdministrator() returns true for Admin or Super Admin roles.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testIsAdministratorReturnsTrueForAdminAndSuperAdmin(): void
@@ -160,6 +181,9 @@ class UserTest extends TestCase
 
     /**
      * Tests that isAdministrator() returns false for other roles.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -178,6 +202,9 @@ class UserTest extends TestCase
     /**
      * Tests that isOnlyAdmin() correctly calls hasRole.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testIsOnlyAdminMethod(): void
@@ -194,6 +221,9 @@ class UserTest extends TestCase
 
     /**
      * Tests that isSuperAdmin() correctly calls hasRole.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -212,6 +242,9 @@ class UserTest extends TestCase
     /**
      * Tests that isSubscriber() correctly calls hasRole.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testIsSubscriberMethod(): void
@@ -229,6 +262,9 @@ class UserTest extends TestCase
     /**
      * Tests that isUser() correctly calls hasRole.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testIsUserMethod(): void
@@ -245,6 +281,9 @@ class UserTest extends TestCase
 
     /**
      * Runs after each test to clean up mocks.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
