@@ -12,7 +12,7 @@ Route::prefix('/v1')->group(function () {
     Route::get('/health', fn () => 'Health is good!');
 
     // Public Auth Routes
-    Route::prefix('auth')->name('auth.')->group(function () {
+    Route::prefix('auth')->name('v1.auth.')->group(function () {
         Route::post('register', RegisterController::class)->name('register');
         Route::post('login', [LoginController::class, 'login'])->name('login');
         Route::post('forgot-password', [PasswordController::class, 'forgotPassword'])->name('password.forgot');
