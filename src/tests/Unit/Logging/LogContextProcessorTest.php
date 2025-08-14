@@ -48,6 +48,7 @@ namespace Tests\Unit\Logging {
          *
          * @runInSeparateProcess
          * @preserveGlobalState disabled
+         *
          * @return void
          */
         public function testInvokeEnrichesLogRecord(): void

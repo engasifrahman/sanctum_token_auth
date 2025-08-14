@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\Middleware;
 
-use Mockery;
 use Closure;
-use Illuminate\Support\Str;
+use Mockery;
 use Tests\TestCase;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Middleware\RequestIdMiddleware;
