@@ -11,15 +11,14 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 class UserTest extends TestCase
 {
     /**
-     * @var User|Mockery\MockInterface
+     * Mocked User instance for testing.
+     *
+     * @var MockInterface
      */
-    protected $user;
+    protected $userMock;
 
     /**
      * Runs before each test to set up our mocks.
-     *
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -28,7 +27,7 @@ class UserTest extends TestCase
         parent::setUp();
 
         // Create a user mock with partial mocking to allow some real methods.
-        $this->user = Mockery::mock(User::class)->makePartial();
+        $this->userMock = Mockery::mock(User::class)->makePartial();
     }
 
     /**
@@ -44,7 +43,7 @@ class UserTest extends TestCase
         // Assert that the roles method returns a BelongsToMany instance.
         // We're not testing the relationship logic here, just that the method
         // returns the correct type of relationship object.
-        $this->assertInstanceOf(BelongsToMany::class, $this->user->roles());
+        $this->assertInstanceOf(BelongsToMany::class, $this->userMock->roles());
     }
 
     /**
@@ -64,10 +63,10 @@ class UserTest extends TestCase
             (object) ['name' => 'Editor'],
         ]);
         // Set the mocked roles on the user.
-        $this->user->setRelation('roles', $rolesCollection);
+        $this->userMock->setRelation('roles', $rolesCollection);
 
         // Act
-        $roleNames = $this->user->role_names;
+        $roleNames = $this->userMock->role_names;
 
         // Assert
         $this->assertIsArray($roleNames);
@@ -75,19 +74,19 @@ class UserTest extends TestCase
     }
 
     /**
-     * Tests the hasRole method with a single string role.
+     * Tests the hasRole method with a single role.
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      *
      * @return void
      */
-    public function testHasRoleWithSingleString(): void
+    public function testHasRoleWithSingleRole(): void
     {
         // Arrange
         // Mock the roles relationship and the query builder.
         $relationMock = Mockery::mock(BelongsToMany::class);
-        $this->user->shouldReceive('roles')->andReturn($relationMock);
+        $this->userMock->shouldReceive('roles')->andReturn($relationMock);
         $relationMock->shouldReceive('whereRaw')
             ->once()
             ->with('LOWER(name) IN (?)', ['admin'])
@@ -97,25 +96,25 @@ class UserTest extends TestCase
             ->andReturn(true);
 
         // Act
-        $result = $this->user->hasRole('Admin');
+        $result = $this->userMock->hasRole('Admin');
 
         // Assert
         $this->assertTrue($result);
     }
 
     /**
-     * Tests the hasRole method with an array of roles.
+     * Tests the hasRole method with multiple roles.
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      *
      * @return void
      */
-    public function testHasRoleWithArrayOfRoles(): void
+    public function testHasRoleWithMultipleRoles(): void
     {
         // Arrange
         $relationMock = Mockery::mock(BelongsToMany::class);
-        $this->user->shouldReceive('roles')->andReturn($relationMock);
+        $this->userMock->shouldReceive('roles')->andReturn($relationMock);
         $relationMock->shouldReceive('whereRaw')
             ->once()
             ->with('LOWER(name) IN (?,?)', ['admin', 'editor'])
@@ -125,7 +124,7 @@ class UserTest extends TestCase
             ->andReturn(true);
 
         // Act
-        $result = $this->user->hasRole(['Admin', 'Editor']);
+        $result = $this->userMock->hasRole(['Admin', 'Editor']);
 
         // Assert
         $this->assertTrue($result);
@@ -143,7 +142,6 @@ class UserTest extends TestCase
     {
         // Arrange
         $relationMock = Mockery::mock(BelongsToMany::class);
-        $this->user->shouldReceive('roles')->andReturn($relationMock);
         $relationMock->shouldReceive('whereRaw')
             ->once()
             ->with('LOWER(name) IN (?,?,?)', ['admin', 'editor', 'guest'])
@@ -151,9 +149,10 @@ class UserTest extends TestCase
         $relationMock->shouldReceive('exists')
             ->once()
             ->andReturn(true);
+        $this->userMock->shouldReceive('roles')->andReturn($relationMock);
 
         // Act
-        $result = $this->user->hasRole([' Admin ', 'editor', 'Guest']);
+        $result = $this->userMock->hasRole([' Admin ', 'editor', 'Guest']);
 
         // Assert
         $this->assertTrue($result);
@@ -170,13 +169,13 @@ class UserTest extends TestCase
     public function testIsAdministratorReturnsTrueForAdminAndSuperAdmin(): void
     {
         // Arrange
-        $this->user->shouldReceive('hasRole')
+        $this->userMock->shouldReceive('hasRole')
             ->once()
             ->with(['Admin', 'Super Admin'])
             ->andReturn(true);
 
         // Act & Assert
-        $this->assertTrue($this->user->isAdministrator());
+        $this->assertTrue($this->userMock->isAdministrator());
     }
 
     /**
@@ -190,13 +189,13 @@ class UserTest extends TestCase
     public function testIsAdministratorReturnsFalseForOtherRoles(): void
     {
         // Arrange
-        $this->user->shouldReceive('hasRole')
+        $this->userMock->shouldReceive('hasRole')
             ->once()
             ->with(['Admin', 'Super Admin'])
             ->andReturn(false);
 
         // Act & Assert
-        $this->assertFalse($this->user->isAdministrator());
+        $this->assertFalse($this->userMock->isAdministrator());
     }
 
     /**
@@ -210,13 +209,13 @@ class UserTest extends TestCase
     public function testIsOnlyAdminMethod(): void
     {
         // Arrange
-        $this->user->shouldReceive('hasRole')
+        $this->userMock->shouldReceive('hasRole')
             ->once()
             ->with('Admin')
             ->andReturn(true);
 
         // Act & Assert
-        $this->assertTrue($this->user->isOnlyAdmin());
+        $this->assertTrue($this->userMock->isOnlyAdmin());
     }
 
     /**
@@ -230,13 +229,13 @@ class UserTest extends TestCase
     public function testIsSuperAdminMethod(): void
     {
         // Arrange
-        $this->user->shouldReceive('hasRole')
+        $this->userMock->shouldReceive('hasRole')
             ->once()
             ->with('Super Admin')
             ->andReturn(true);
 
         // Act & Assert
-        $this->assertTrue($this->user->isSuperAdmin());
+        $this->assertTrue($this->userMock->isSuperAdmin());
     }
 
     /**
@@ -250,13 +249,13 @@ class UserTest extends TestCase
     public function testIsSubscriberMethod(): void
     {
         // Arrange
-        $this->user->shouldReceive('hasRole')
+        $this->userMock->shouldReceive('hasRole')
             ->once()
             ->with('Subscriber')
             ->andReturn(true);
 
         // Act & Assert
-        $this->assertTrue($this->user->isSubscriber());
+        $this->assertTrue($this->userMock->isSubscriber());
     }
 
     /**
@@ -270,13 +269,42 @@ class UserTest extends TestCase
     public function testIsUserMethod(): void
     {
         // Arrange
-        $this->user->shouldReceive('hasRole')
+        $this->userMock->shouldReceive('hasRole')
             ->once()
             ->with('User')
             ->andReturn(true);
 
         // Act & Assert
-        $this->assertTrue($this->user->isUser());
+        $this->assertTrue($this->userMock->isUser());
+    }
+
+    /**
+     * Tests that casts() returns the expected attribute casting array.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
+     * @return void
+     */
+    public function testCastsMethod(): void
+    {
+        // Arrange
+        // Create a closure that calls the protected casts() method
+        $closure = function (): array {
+            return $this->casts();
+        };
+
+        // Act
+        // Call the closure with $this bound to the mocked user
+        $result = $closure->call($this->userMock);
+
+
+        // Assert
+        $this->assertIsArray($result);
+        $this->assertSame([
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ], $result);
     }
 
     /**

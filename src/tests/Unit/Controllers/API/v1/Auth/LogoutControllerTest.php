@@ -21,7 +21,7 @@ class LogoutControllerTest extends TestCase
     {
         parent::setUp();
 
-        // Prevent the Log facade from writing to an actual file during tests.
+        // Mock Log facade to avoid writing real logs
         Log::shouldReceive('info')->byDefault();
         Log::shouldReceive('warning')->byDefault();
         Log::shouldReceive('error')->byDefault();

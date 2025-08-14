@@ -25,7 +25,7 @@ class EmailVerificationControllerTest extends TestCase
     {
         parent::setUp();
 
-        // Mock the Log facade to prevent writing to a real log
+        // Mock Log facade to avoid writing real logs
         Log::shouldReceive('info')->byDefault();
         Log::shouldReceive('warning')->byDefault();
         Log::shouldReceive('error')->byDefault();

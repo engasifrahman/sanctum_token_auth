@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Validator;
 use App\Http\Requests\API\v1\Auth\LoginRequest;
 use App\Http\Controllers\API\v1\Auth\LoginController;
 

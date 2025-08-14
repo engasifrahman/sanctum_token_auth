@@ -27,7 +27,7 @@ class PasswordControllerTest extends TestCase
     {
         parent::setUp();
 
-        // Mock the Log facade to prevent writing to a real log file during tests.
+        // Mock Log facade to avoid writing real logs
         Log::shouldReceive('info')->byDefault();
         Log::shouldReceive('warning')->byDefault();
         Log::shouldReceive('error')->byDefault();

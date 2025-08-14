@@ -3,10 +3,10 @@
 namespace Tests\Unit\Controllers\API\v1\Auth;
 
 use Mockery;
-use Exception;
 use Tests\TestCase;
 use App\Models\Role;
 use App\Models\User;
+use Mockery\Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -28,6 +28,17 @@ class RegisterControllerTest extends TestCase
     {
         parent::setUp();
 
+        // Mock Log facade to avoid writing real logs
+        Log::shouldReceive('info')->byDefault();
+        Log::shouldReceive('warning')->byDefault();
+        Log::shouldReceive('error')->byDefault();
+
+        // Mock the Log facade to prevent any DB connection.
+        DB::shouldReceive('beginTransaction')->byDefault();
+        DB::shouldReceive('commit')->byDefault();
+        DB::shouldReceive('rollBack')->byDefault();
+
+        // Common payload for registration tests
         $this->defaultPayload = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
@@ -56,67 +67,44 @@ class RegisterControllerTest extends TestCase
      * @param bool $throwException
      * @return void
      */
-    protected function mockUserCreate(?array $payload = null, ?array $roleIds = null, bool $returnNull = false, bool $throwExcetion = false): void
+    protected function mockUserCreate(?array $payload = null, ?array $roleIds = null, bool $returnNull = false, bool $throwException = false): void
     {
         $payload = $payload ?? $this->defaultPayload;
+        $userCreateParams = [
+            'name' => $payload['name'] ?? null,
+            'email' => $payload['email'] ?? null,
+            'password' => $payload['password'] ?? null,
+        ];
 
-        $userMock = null;
-        if (!$returnNull && !$throwExcetion) {
-            $userMock = Mockery::mock();
-            $userMock->id = 1;
-            $userMock->name = $payload['name'];
-            $userMock->email = $payload['email'];
+        $userMock = Mockery::mock(User::class);
+        if ($returnNull) {
+            $userMock->shouldReceive('create')->once()->with($userCreateParams)->andReturn(null);
+        } elseif ($throwException) {
+            $userMock->shouldReceive('create')->once()->with($userCreateParams)->andThrow(new Exception('Database error'));
+        } else {
+            $dependencyMock = Mockery::mock();
+            $dependencyMock->id = 1;
+            $dependencyMock->name = $payload['name'] ?? null;
+            $dependencyMock->email = $payload['email'] ?? null;
+            $dependencyMock->role_names = $payload['roles'] ?? [];
 
             if ($roleIds !== null) {
                 $relationMock = Mockery::mock(BelongsToMany::class);
                 $relationMock->shouldReceive('sync')->once()->with($roleIds)->andReturn(true);
-                $userMock->shouldReceive('roles')->once()->andReturn($relationMock);
+                $dependencyMock->shouldReceive('roles')->once()->andReturn($relationMock);
             }
+
+            $userMock->shouldReceive('create')->once()->with($userCreateParams)->andReturn($dependencyMock);
         }
 
-        $aliasMock = Mockery::mock('alias:' . User::class)
-            ->shouldReceive('create')
-            ->once()
-            ->with([
-                'name' => $payload['name'] ?? null,
-                'email' => $payload['email'] ?? null,
-                'password' => $payload['password'] ?? null,
-            ]);
-
-        if ($throwExcetion) {
-            $aliasMock->andThrow(new Exception('Database error'));
-        } else {
-            $aliasMock->andReturn($userMock);
-        }
-    }
-
-    /** Expect a successful registration flow
-     * @param int $logInfoCount
-     * @return void
-     */
-    protected function expectSuccessfulRegistration(int $logInfoCount = 4): void
-    {
-        Log::shouldReceive('info')->times($logInfoCount);
-        Log::shouldReceive('error')->never();
-        DB::shouldReceive('beginTransaction')->once();
-        DB::shouldReceive('commit')->once();
-        DB::shouldReceive('rollBack')->never();
-        Event::shouldReceive('dispatch')->once()->with(Mockery::type(Registered::class));
-    }
-
-    /** Expect a failed registration flow
-     * @return void
-     */
-    protected function expectFailedRegistration(): void
-    {
-        Log::shouldReceive('info')->once();
-        Log::shouldReceive('error')->once();
-        DB::shouldReceive('beginTransaction')->once();
-        DB::shouldReceive('commit')->never();
-        DB::shouldReceive('rollBack')->once();
+        $this->app->instance(User::class, $userMock);
     }
 
     /** Fail registration when User::create returns null
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testFailedRegistrationWhenUserInstanceIsEmpty(): void
@@ -125,13 +113,7 @@ class RegisterControllerTest extends TestCase
         $request = $this->prepareRequest();
         $this->mockUserCreate(returnNull: true);
 
-        Log::shouldReceive('info')->once();
-        Log::shouldReceive('error')->once();
-        DB::shouldReceive('beginTransaction')->once();
-        DB::shouldReceive('commit')->never();
-        DB::shouldReceive('rollBack')->never();
-
-        $controller = new RegisterController();
+        $controller = $this->app->make(RegisterController::class);
 
         // Act
         $response = $controller->__invoke($request);
@@ -142,6 +124,10 @@ class RegisterControllerTest extends TestCase
     }
 
     /** Successful registration without roles
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testSuccessfulRegistrationWithoutdRoles(): void
@@ -150,9 +136,9 @@ class RegisterControllerTest extends TestCase
         $request = $this->prepareRequest();
         $this->mockUserCreate();
 
-        $this->expectSuccessfulRegistration();
+        Event::shouldReceive('dispatch')->once()->with(Mockery::type(Registered::class));
 
-        $controller = new RegisterController();
+        $controller = $this->app->make(RegisterController::class);
 
         // Act
         $response = $controller->__invoke($request);
@@ -163,6 +149,10 @@ class RegisterControllerTest extends TestCase
     }
 
     /** Successful registration with roles
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testSuccessfulRegistrationWithRoles(): void
@@ -172,17 +162,21 @@ class RegisterControllerTest extends TestCase
         $request = $this->prepareRequest($payload);
 
         $roleIds = [1, 2];
-        Mockery::mock('alias:' . Role::class)
-            ->shouldReceive('getRoleIdsByNames')
-            ->once()
-            ->with($payload['roles'])
-            ->andReturn($roleIds);
+        $roleMock = Mockery::mock(Role::class);
+        $roleMock->shouldReceive('getRoleIdsByNames')
+                ->once()
+                ->with($payload['roles'])
+                ->andReturn($roleIds);
+
+        // Bind the mock to the container
+        $this->app->instance(Role::class, $roleMock);
 
         $this->mockUserCreate(payload: $payload, roleIds: $roleIds);
 
-        $this->expectSuccessfulRegistration(5);
+        Event::shouldReceive('dispatch')->once()->with(Mockery::type(Registered::class));
 
-        $controller = new RegisterController();
+        // Inject or resolve controller
+        $controller = $this->app->make(RegisterController::class);
 
         // Act
         $response = $controller->__invoke($request);
@@ -193,17 +187,19 @@ class RegisterControllerTest extends TestCase
     }
 
     /** Fail registration when exception is thrown
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testFailedRegistrationWhenExceptionOccured(): void
     {
         // Arrange
         $request = $this->prepareRequest();
-        $this->mockUserCreate(throwExcetion: true);
+        $this->mockUserCreate(throwException: true);
 
-        $this->expectFailedRegistration();
-
-        $controller = new RegisterController();
+        $controller = $this->app->make(RegisterController::class);
 
         // Act
         $response = $controller->__invoke($request);

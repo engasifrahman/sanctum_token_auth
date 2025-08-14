@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\v1\Auth;
 
 use Throwable;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
@@ -11,10 +12,13 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\Registered;
 use App\Http\Requests\API\v1\Auth\RegistrationRequest;
-use App\Models\Role;
 
 class RegisterController extends Controller
 {
+    public function __construct(private User $user, private Role $role)
+    {
+    }
+
     /**
      * Handle the user registration request.
      *
@@ -36,7 +40,7 @@ class RegisterController extends Controller
 
         try {
             // Create a new user instance
-            $user = User::create([
+            $user = $this->user->create([
                 'name'     => $request->name,
                 'email'    => $request->email,
                 'password' => $request->password,
@@ -55,7 +59,7 @@ class RegisterController extends Controller
             if ($request->filled('roles')) {
                 $roleNames = $request->input('roles');
 
-                $roleIds = Role::getRoleIdsByNames($roleNames);
+                $roleIds = $this->role->getRoleIdsByNames($roleNames);
 
                 // Attach roles without duplicates
                 $user->roles()->sync($roleIds);

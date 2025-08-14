@@ -28,8 +28,8 @@ class Role extends Model
      * @param array<string> $names
      * @return array<int>
      */
-    public static function getRoleIdsByNames(array $names): array
+    public function getRoleIdsByNames(array $names): array
     {
-        return Role::whereIn('name', $names)->pluck('id')->all();
+        return $this->whereIn('name', $names)->pluck('id')->all();
     }
 }
