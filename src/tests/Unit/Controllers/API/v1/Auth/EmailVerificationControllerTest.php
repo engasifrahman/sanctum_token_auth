@@ -59,6 +59,9 @@ class EmailVerificationControllerTest extends TestCase
     /**
      * Test a successful email verification.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testEmailVerificationSucceeds(): void
@@ -89,6 +92,9 @@ class EmailVerificationControllerTest extends TestCase
     /**
      * Test that verification fails if the email is already verified.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testEmailVerificationFailsIfAlreadyVerified(): void
@@ -114,6 +120,9 @@ class EmailVerificationControllerTest extends TestCase
     /**
      * Test that verification fails if an invalid hash is provided.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testEmailVerificationFailsOnInvalidHash(): void
@@ -138,6 +147,9 @@ class EmailVerificationControllerTest extends TestCase
 
     /**
      * Test that verification fails if the user is not found.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -168,6 +180,9 @@ class EmailVerificationControllerTest extends TestCase
     /**
      * Test that verification fails if markEmailAsVerified() returns false.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testEmailVerificationFailsIfMarkEmailAsVerifiedReturnsFalse(): void
@@ -193,6 +208,9 @@ class EmailVerificationControllerTest extends TestCase
 
     /**
      * Test that verification fails gracefully if markEmailAsVerified() throws an exception.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -220,6 +238,9 @@ class EmailVerificationControllerTest extends TestCase
     /**
      * Test a successful resend verification email request.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testResendVerificationSucceeds(): void
@@ -245,6 +266,9 @@ class EmailVerificationControllerTest extends TestCase
 
     /**
      * Test that resend fails if the user is not found.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -272,6 +296,9 @@ class EmailVerificationControllerTest extends TestCase
     /**
      * Test that resend fails if the email is already verified.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testResendVerificationFailsIfAlreadyVerified(): void
@@ -296,6 +323,9 @@ class EmailVerificationControllerTest extends TestCase
 
     /**
      * Test that resend fails gracefully if an exception occurs during notification.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -322,6 +352,9 @@ class EmailVerificationControllerTest extends TestCase
 
     /**
      * Clean up mocks after each test.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */

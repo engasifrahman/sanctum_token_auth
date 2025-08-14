@@ -103,6 +103,9 @@ class LoginControllerTest extends TestCase
     /**
      * Login must fail if email is incorrect.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testLoginFailsWithWrongEmail(): void
@@ -123,6 +126,9 @@ class LoginControllerTest extends TestCase
 
     /**
      * Login must fail if password is incorrect.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -149,6 +155,9 @@ class LoginControllerTest extends TestCase
     /**
      * Login must fail if email is not verified.
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     *
      * @return void
      */
     public function testLoginFailsIfEmailNotVerified(): void
@@ -174,6 +183,9 @@ class LoginControllerTest extends TestCase
 
     /**
      * Login must fail if exception occurs during token creation.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
@@ -205,6 +217,9 @@ class LoginControllerTest extends TestCase
 
     /**
      * Login must succeed when credentials and verification are valid.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      *
      * @return void
      */
