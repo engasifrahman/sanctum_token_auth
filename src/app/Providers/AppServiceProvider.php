@@ -32,13 +32,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register a global Gate policy to allow all abilities for administrators
-        // This allows administrators to bypass all authorization checks
-        Gate::before(function (User $user, string $ability) {
-            if ($user->isAdministrator()) {
-                return true;
-            }
-        });
 
         // Load Response macros for seamless API responses
         Response::mixin(new ApiResponseMacros());
@@ -82,7 +75,7 @@ class AppServiceProvider extends ServiceProvider
 
             // Generate the signed URL for the *backend* verification route
             $temporarySignedRoute = URL::temporarySignedRoute(
-                'v1.auth.verification.verify', // This is the name of your API verification route
+                'v1.auth.verify-email', // This is the name of your API verification route
                 Carbon::now()->addMinutes(config('auth.verification.expire', 60)),
                 [
                     'id' => $id,

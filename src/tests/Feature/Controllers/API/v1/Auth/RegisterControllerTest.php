@@ -16,16 +16,6 @@ class RegisterControllerTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * @var Role
-     */
-    private Role $roleAdmin;
-
-    /**
-     * @var Role
-     */
-    private Role $roleUser;
-
-    /**
      * Test validation failures for invalid input data.
      *
      * @return void
@@ -58,7 +48,7 @@ class RegisterControllerTest extends TestCase
     {
         // Arrange
         Event::fake([Registered::class]);
-        $this->roleUser = Role::factory()->user()->create();
+        $userRole = Role::factory()->user()->create();
 
         $payload = [
             'name'                  => 'John Doe',
@@ -81,7 +71,7 @@ class RegisterControllerTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'john.doe@example.com']);
         $user = User::where('email', 'john.doe@example.com')->first();
         $this->assertTrue(Hash::check('password123', $user->password));
-        $this->assertTrue($user->roles->contains('id', $this->roleUser->id));
+        $this->assertTrue($user->roles->contains('id', $userRole->id));
         Event::assertDispatched(Registered::class);
     }
 
@@ -93,7 +83,7 @@ class RegisterControllerTest extends TestCase
     public function testItFailsWhenAssigningAdminRolesWithoutAuthentication(): void
     {
         // Arrange
-        $this->roleAdmin = Role::factory()->admin()->create();
+        Role::factory()->admin()->create();
         $payload = [
             'name'                  => 'Jane Doe',
             'email'                 => 'jane@example.com',
@@ -118,13 +108,10 @@ class RegisterControllerTest extends TestCase
     public function testItFailsWhenNonAdminAssignsAdminRoles(): void
     {
         // Arrange
-        $this->roleAdmin = Role::factory()->admin()->create();
-        $this->roleUser = Role::factory()->user()->create();
+        Role::factory()->admin()->create();
+        $userRole = Role::factory()->user()->create();
         $nonAdmin = User::factory()->create();
-        $nonAdmin->roles()->attach($this->roleUser);
-
-        $token = $nonAdmin->createToken('TestToken')->plainTextToken;
-
+        $nonAdmin->roles()->attach($userRole);
         Sanctum::actingAs($nonAdmin);
 
         $payload = [
@@ -137,7 +124,7 @@ class RegisterControllerTest extends TestCase
 
         // Act
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer test-token',
         ])->postJson(route('v1.auth.register'), $payload);
 
         // Assert
@@ -156,11 +143,11 @@ class RegisterControllerTest extends TestCase
     public function testItAllowsAdminToAssignAdminRoles(): void
     {
         // Arrange
-        $this->roleAdmin = Role::factory()->admin()->create();
-        $this->roleUser = Role::factory()->user()->create();
+        Role::factory()->user()->create();
+        $adminRole = Role::factory()->admin()->create();
         $admin = User::factory()->create();
-        $admin->roles()->attach($this->roleAdmin);
-        $token = $admin->createToken('TestToken')->plainTextToken;
+        $admin->roles()->attach($adminRole);
+        Sanctum::actingAs($admin);
 
         $payload = [
             'name'                  => 'Alice Doe',
@@ -172,14 +159,14 @@ class RegisterControllerTest extends TestCase
 
         // Act
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer test-token',
         ])->postJson(route('v1.auth.register'), $payload);
 
         // Assert
         $response->assertOk();
         $this->assertDatabaseHas('users', ['email' => 'alice@example.com']);
         $this->assertTrue(
-            User::where('email', 'alice@example.com')->first()->roles->contains('id', $this->roleAdmin->id)
+            User::where('email', 'alice@example.com')->first()->roles->contains('id', $adminRole->id)
         );
     }
 
@@ -191,11 +178,11 @@ class RegisterControllerTest extends TestCase
     public function testItFailsWhenAdminRoleSelectedWithAnotherRole(): void
     {
         // Arrange
-        $this->roleAdmin = Role::factory()->admin()->create();
-        $this->roleUser = Role::factory()->user()->create();
+        Role::factory()->user()->create();
+        $adminRole = Role::factory()->admin()->create();
         $admin = User::factory()->create();
-        $admin->roles()->attach($this->roleAdmin);
-        $token = $admin->createToken('TestToken')->plainTextToken;
+        $admin->roles()->attach($adminRole);
+        Sanctum::actingAs($admin);
 
         $payload = [
             'name'                  => 'Sam Doe',
@@ -207,7 +194,7 @@ class RegisterControllerTest extends TestCase
 
         // Act
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer test-token',
         ])->postJson(route('v1.auth.register'), $payload);
 
         // Assert

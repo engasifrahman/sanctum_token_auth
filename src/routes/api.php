@@ -15,15 +15,15 @@ Route::prefix('/v1')->group(function () {
     Route::prefix('auth')->name('v1.auth.')->group(function () {
         Route::post('register', RegisterController::class)->name('register');
         Route::post('login', [LoginController::class, 'login'])->name('login');
-        Route::post('forgot-password', [PasswordController::class, 'forgotPassword'])->name('password.forgot');
-        Route::post('reset-password', [PasswordController::class, 'resetPassword'])->name('password.reset');
-        Route::post('resend-verification-email', [EmailVerificationController::class, 'resendVerificationEmail'])->name('verification.resend');
-        Route::post('verify-email/{id}/{hash}', [EmailVerificationController::class, 'verifyEmailLink'])->middleware('signed')->name('verification.verify');
+        Route::post('forgot-password', [PasswordController::class, 'forgotPassword'])->name('forgot-password');
+        Route::post('reset-password', [PasswordController::class, 'resetPassword'])->name('reset-password');
+        Route::post('resend-verification-email', [EmailVerificationController::class, 'resendVerificationEmail'])->name('resend-verification-email');
+        Route::post('verify-email/{id}/{hash}', [EmailVerificationController::class, 'verifyEmailLink'])->middleware('signed')->name('verify-email');
     });
 
     // Protected Auth Routes
-    Route::middleware(['auth:sanctum', 'verified'])->prefix('auth')->name('auth.')->group(function () {
-        Route::post('refresh-token', [LoginController::class, 'refreshToken'])->name('token.refresh');
+    Route::middleware(['auth:sanctum', 'verified'])->prefix('auth')->name('v1.auth.')->group(function () {
+        Route::post('refresh-token', [LoginController::class, 'refreshToken'])->name('refresh-token');
         Route::post('logout', LogoutController::class)->name('logout');
     });
 

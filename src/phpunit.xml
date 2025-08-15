@@ -17,6 +17,30 @@
             <directory>app</directory>
         </include>
     </source>
+    <logging>
+        <!-- CLI branch coverage report -->
+        <log type="coverage-text"
+             target="php://stdout"
+             showUncoveredFiles="true"
+             showOnlySummary="false"
+             showBranchCoverage="true"/>
+
+        <!-- HTML branch coverage report -->
+        <log type="coverage-html"
+             target="coverage/html"
+             showUncoveredFiles="true"
+             showOnlySummary="false"
+             showBranchCoverage="true"/>
+    </logging>
+     <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">./app</directory>
+        </include>
+        <exclude>
+            <directory suffix=".php">./vendor</directory>
+            <directory suffix=".php">./tests</directory>
+        </exclude>
+    </coverage>
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
