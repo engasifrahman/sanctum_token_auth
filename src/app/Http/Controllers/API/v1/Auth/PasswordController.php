@@ -45,6 +45,14 @@ class PasswordController extends Controller
                     'If your email address exists in our system, a password reset link has been sent to it.'
                 );
 
+            case Password::INVALID_USER:
+                Log::warning('Password reset attempted for a non-existent user.', $logContext());
+
+                return response()->error(
+                    'Could not send password reset link. Please try again.',
+                    Response::HTTP_INTERNAL_SERVER_ERROR
+                );
+
             case Password::RESET_THROTTLED:
                 Log::warning('Password reset request throttled.', $logContext());
 
