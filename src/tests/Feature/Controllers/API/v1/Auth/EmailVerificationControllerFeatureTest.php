@@ -24,13 +24,13 @@ class EmailVerificationControllerFeatureTest extends TestCase
      */
     private function prepareSignedUrl(int|null $id = null, string|null $email = null): string
     {
-       return URL::temporarySignedRoute(
+        return URL::temporarySignedRoute(
             'v1.auth.verify-email', // This is the name of your API verification route
             Carbon::now()->addMinutes(config('auth.verification.expire', 60)),
             [
-                'id' => $id,
-                'hash' => sha1($email),
-            ]
+                 'id' => $id,
+                 'hash' => sha1($email),
+             ]
         );
     }
 
