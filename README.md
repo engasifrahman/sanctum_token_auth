@@ -1,6 +1,8 @@
-# Laravel 12 API Auth System with Sanctum 🔑
+<div align="center">
+  <h1>Laravel 12 API Auth System with Sanctum 🔑</h1>
+</div>
 
-This project is a robust API system built on **Laravel 12** that uses **Laravel Sanctum** for token-based authentication. It follows a monorepo folder structure 📂 and includes a comprehensive Docker setup 🐳 for both development and production environments. The codebase is held to the highest standards, with **100% PSR-12** compliance ✅ and **100% test coverage** ✅ using PHPUnit 🧪.
+This project is a robust API system built on **Laravel 12** that uses **Laravel Sanctum** for token-based authentication. It follows a monorepo folder structure 📂 and includes a comprehensive Docker setup 🐳 for **local (dev)**, **staging**, and **production** environments. The codebase is held to the highest standards, with **100% PSR-12** compliance ✅ and **100% test coverage** ✅ using PHPUnit 🧪.
 
 -----
 
@@ -9,20 +11,16 @@ This project is a robust API system built on **Laravel 12** that uses **Laravel 
   - **Authentication:** Token-based authentication using **Laravel Sanctum**. 🛡️
   - **User Management:** Routes for user registration ✍️, login 🚪, password management ⚙️, and email verification 📧.
   - **Access Control:** Implements role-based access with custom middleware 👮, ensuring different user types (`Admin`, `User`, `Subscriber`) have the correct access.
-  - **Dockerized Environment:** Separate Docker images are provided for both development 🛠️ and production 🚀, allowing for a consistent, isolated, and optimized environment.
+  - **Dockerized Environment:** Separate Docker images are provided for **local (dev)** 🛠️, **staging**, and **production** 🚀, allowing for a consistent, isolated, and optimized environment.
   - **Code Quality:**
       - **100% PSR-12** compliant code style. ✅
       - **100% test coverage** verified by both unit and feature tests. ✅
-      - **Static analysis** with Larastan 🧐 to find potential bugs and code smells early.
+      - **Static analysis** with **Larastan** 🧐 to find potential bugs and code smells early.
   - **Continuous Integration:** Four GitHub Actions workflows are configured to automate checks for every pull request:
     1.  **PHPUnit Test with Coverage Check:** Runs the full test suite 🧪 and verifies code coverage percentage 📊.
     2.  **Migration Check:** Ensures database migrations are valid and can be run. 💾
     3.  **PHP-CS-Fixer Check:** Automatically checks and fixes code style to maintain PSR-12 compliance. 🎨
     4.  **Larastan Check:** Performs static code analysis to catch common issues. 🚦
-
------
-
-I will add the optimized project tree structure to the `README.md` file you provided earlier. This section will be a new addition, formatted to be clean and easy to read. I'll place it under a new heading to keep the document organized.
 
 -----
 
@@ -60,12 +58,12 @@ This project follows a monorepo structure with a clear and logical directory lay
  ┃ ┃ ┣ 📂Logging
  ┃ ┃ ┣ 📂Mixins
  ┃ ┃ ┣ 📂Models
- ┃ ┃ ┗ 📂Providersp
+ ┃ ┃ ┗ 📂Providers
  ┃ ┣ 📂bootstrap
  ┃ ┣ 📂config
  ┃ ┣ 📂coverage-html
  ┃ ┣ 📂database
- ┃ ┃ ┣ 📂factoriesp
+ ┃ ┃ ┣ 📂factories
  ┃ ┃ ┣ 📂migrations
  ┃ ┃ ┣ 📂seeders
  ┃ ┃ ┗ 📜.gitignore
@@ -105,6 +103,8 @@ This project follows a monorepo structure with a clear and logical directory lay
 ```
 
 This structure helps maintain a clear separation of concerns, making the project easier to navigate and scale.
+
+-----
 
 ## ➡️ API Routes
 
@@ -162,10 +162,27 @@ These routes require both a valid token and a specific role.
     ```
 
 2.  **Set up the environment:**
+    Use the appropriate `docker-compose` and `.env` file for your desired environment.
+
+    **For Local (Dev):**
 
     ```bash
     cp docker-compose.local.yml docker-compose.yml
-    cd src & cp .env.local .env
+    cd src && cp .env.local .env
+    ```
+
+    **For Staging:**
+
+    ```bash
+    cp docker-compose.staging.yml docker-compose.yml
+    cd src && cp .env.staging .env
+    ```
+
+    **For Production:**
+
+    ```bash
+    cp docker-compose.prod.yml docker-compose.yml
+    cd src && cp .env.prod .env
     ```
 
 3.  **Build and run the Docker containers:**
@@ -173,12 +190,21 @@ These routes require both a valid token and a specific role.
     ```bash
     docker-compose up -d --build
     ```
+4.  **Run migrations and seed the database:**
+
+    ```bash
+    docker-compose exec app php artisan migrate --seed
+    ```
 
 The API will now be running and accessible at `http://localhost:8000`. 🎉
 
 -----
 
-## 🧪 Running Tests
+## 🧪 Running Tests & Code Quality Checks
+
+To run the full test suite and code quality checks, execute the following commands.
+
+### **PHPUnit**
 
 To run the full test suite and check code coverage, execute the following command:
 
@@ -189,8 +215,34 @@ docker-compose exec app vendor/bin/phpunit --testdox --coverage-html
 To generate an HTML report of the code coverage, which will be saved in the `src/coverage-html` directory, use this command:
 
 ```bash
-docker-compose exec app vendor/bin/phpunit  --testdox --coverage-html=coverage-html
+docker-compose exec app vendor/bin/phpunit --testdox --coverage-html=coverage-html
 ```
+
+### **PHP-CS-Fixer** 🎨
+
+PHP-CS-Fixer checks and fixes code style to ensure PSR-12 compliance.
+
+  * **Check for code style violations:**
+    ```bash
+    docker-compose exec app vendor/bin/php-cs-fixer fix app --dry-run --diff --verbose
+    ```
+  * **Fix all code style violations:**
+    ```bash
+    docker-compose exec app vendor/bin/php-cs-fixer fix app
+    ```
+
+### **Larastan (PHPStan)** 🧐
+
+Larastan performs static analysis to find potential bugs and code smells.
+
+  * **Run a full static analysis:**
+    ```bash
+    docker-compose exec app vendor/bin/phpstan analyse
+    ```
+  * **Generate a baseline to ignore existing errors:**
+    ```bash
+    docker-compose exec app vendor/bin/phpstan analyse --generate-baseline
+    ```
 
 -----
 
