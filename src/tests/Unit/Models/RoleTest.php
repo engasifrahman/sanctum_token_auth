@@ -1,5 +1,7 @@
 <?php
+namespace Tests\Unit\Models;
 
+use Mockery;
 use Tests\TestCase;
 use App\Models\Role;
 use Mockery\MockInterface;

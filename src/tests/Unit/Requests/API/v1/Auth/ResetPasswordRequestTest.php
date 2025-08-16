@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Request\API\v1\Auth;
+namespace Tests\Unit\Requests\API\v1\Auth;
 
 use Tests\TestCase;
 use Illuminate\Support\Facades\Validator;

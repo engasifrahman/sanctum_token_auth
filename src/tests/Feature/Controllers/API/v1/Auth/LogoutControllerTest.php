@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\API\v1\Auth;
+namespace Tests\Feature\Controllers\API\v1\Auth;
 
 use Tests\TestCase;
 use App\Models\User;
