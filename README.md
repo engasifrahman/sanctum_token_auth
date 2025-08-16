@@ -156,23 +156,23 @@ These routes require both a valid token and a specific role.
 
 1.  **Clone the repository:**
 
-    \`\`\`bash
+    ```bash
     git clone [repository-url]
     cd [project-directory]
-    \`\`\`
+    ```
 
 2.  **Set up the environment:**
 
-    \`\`\`bash
+    ```bash
     cp docker-compose.local.yml docker-compose.yml
     cd src & cp .env.local .env
-    \`\`\`
+    ```
 
 3.  **Build and run the Docker containers:**
 
-    \`\`\`bash
+    ```bash
     docker-compose up -d --build
-    \`\`\`
+    ```
 
 The API will now be running and accessible at `http://localhost:8000`. 🎉
 
@@ -182,15 +182,15 @@ The API will now be running and accessible at `http://localhost:8000`. 🎉
 
 To run the full test suite and check code coverage, execute the following command:
 
-\`\`\`bash
-docker-compose exec app vendor/bin/phpunit --testdox --coverage-html --coverage-html=coverage-html
-\`\`\`
+```bash
+docker-compose exec app vendor/bin/phpunit --testdox --coverage-html
+```
 
 To generate an HTML report of the code coverage, which will be saved in the `src/coverage-html` directory, use this command:
 
-\`\`\`bash
+```bash
 docker-compose exec app vendor/bin/phpunit  --testdox --coverage-html=coverage-html
-\`\`\`
+```
 
 -----
 
