@@ -200,6 +200,18 @@ The API will now be running and accessible at `http://localhost:8000`. 🎉
 
 -----
 
+## 📬 Postman Collection
+
+A **Postman Collection** is included at:
+
+```
+src/Sanctum Toten Auth.postman_collection.json
+```
+
+You can import this collection into Postman and test the full authentication flow
+
+-----
+
 ## 🧪 Running Tests & Code Quality Checks
 
 To run the full test suite and code quality checks, execute the following commands.
@@ -217,6 +229,7 @@ To generate an HTML report of the code coverage, which will be saved in the `src
 ```bash
 docker-compose exec app vendor/bin/phpunit --testdox --coverage-html=coverage-html
 ```
+To check coverage open `coverage-html/index.html` in a browser.
 
 ### **PHP-CS-Fixer** 🎨
 
